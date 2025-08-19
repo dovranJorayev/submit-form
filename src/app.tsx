@@ -6,10 +6,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { homeRoute } from "./pages/home/route";
 import { submitFormName, submitFormReducer, submitRoute } from "./pages/submit";
 
-if (process.env.NODE_ENV === "development") {
-  const { worker } = await import("./shared/api/mocks/browser");
-  await worker.start();
-}
+const { worker } = await import("./shared/api/mocks/browser");
+await worker.start();
 
 const router = createBrowserRouter([homeRoute, submitRoute]);
 
