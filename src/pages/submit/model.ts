@@ -1,16 +1,18 @@
+import { createAsyncThunk, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import type {
   BirthPlace,
   Document,
   Organization,
   SubmitFormArg,
-} from "@/shared/api/contracts";
+} from "@shared/api/contracts";
 import {
   loadBirthPlacesThunk,
   loadDocumentsThunk,
   loadOrganizationsThunk,
   submitFormThunk,
-} from "@/shared/api/thunks";
-import { createAsyncThunk, createSlice, isAnyOf } from "@reduxjs/toolkit";
+} from "@shared/api/thunks";
+import { isThunkExtra } from "@shared/lib/redux";
+import { ROUTES } from "@shared/lib/router";
 import { z } from "zod";
 
 type SubmitSliceState = Record<
@@ -51,6 +53,16 @@ const submitThunk = createAsyncThunk(
         })
       )
       .unwrap();
+
+    if (isThunkExtra(api.extra)) {
+      api.extra.notifications.show({
+        title: "Üstünlikli iberildi",
+        message: "Arzaňyz kabul edildi we gözden geçirilýär",
+        color: "green",
+      });
+      api.extra.router.navigate(ROUTES.HOME);
+    }
+
     return response;
   },
   {

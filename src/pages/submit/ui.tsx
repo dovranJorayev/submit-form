@@ -1,4 +1,3 @@
-import { useThunkDispatch } from "@/shared/lib/redux";
 import {
   ActionIcon,
   Box,
@@ -19,6 +18,7 @@ import {
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
+import { useThunkDispatch } from "@shared/lib/redux";
 import {
   IconCalendarWeek,
   IconChevronDown,
@@ -63,12 +63,14 @@ export const SubmitPage = () => {
   const handleSubmit = form.onSubmit(async (values) => {
     const validationResult = form.validate();
     if (validationResult.hasErrors) return;
-
-    const result = await dispatch(submitPageModel.actions.submit(values));
-    if (result.meta.requestStatus === "fulfilled") form.reset();
+    await dispatch(submitPageModel.actions.submit(values));
   });
   const handleRemove = () => {
     form.setFieldValue("file", undefined);
+  };
+
+  const handleFileUpload = (file: File | null) => {
+    form.setFieldValue("file", file || undefined);
   };
 
   useEffect(() => {
@@ -198,9 +200,7 @@ export const SubmitPage = () => {
                 <Grid.Col span={{ base: 12, sm: 12, md: 4 }}>
                   <Stack gap="md">
                     <FileButton
-                      onChange={(file) =>
-                        form.setFieldValue("file", file || undefined)
-                      }
+                      onChange={handleFileUpload}
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     >
                       {(props) => (
@@ -301,3 +301,5 @@ export const SubmitPage = () => {
     </Container>
   );
 };
+
+export default SubmitPage;
