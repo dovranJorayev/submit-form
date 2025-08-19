@@ -3,30 +3,25 @@ import type { SubmitResponse } from "../thunks";
 import { mockBirthPlaces, mockDocuments, mockOrganizations } from "./data";
 
 export const handlers = [
-  // Get birth places
   http.get("*/api/birth-places", async () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     return HttpResponse.json(mockBirthPlaces);
   }),
 
-  // Get organizations
   http.get("*/api/organizations", async () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     return HttpResponse.json(mockOrganizations);
   }),
 
-  // Get documents
   http.get("*/api/documents", async () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     return HttpResponse.json(mockDocuments);
   }),
 
-  // Submit form
   http.post("*/api/submit", async ({ request }) => {
     try {
       const formData = await request.formData();
 
-      // Simulate validation
       const placeOfBirth = formData.get("placeOfBirth");
       const documentType = formData.get("documentType");
       const issuedDate = formData.get("issuedDate");
@@ -35,7 +30,6 @@ export const handlers = [
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Simulate validation errors
       if (!placeOfBirth) {
         return HttpResponse.json(
           { success: false, message: "Dogluş ýeri saýlanmadyk" },
@@ -70,15 +64,12 @@ export const handlers = [
           { status: 400 }
         );
       }
-
-      // Simulate successful submission
       const response: SubmitResponse = {
         success: true,
         message: "Arza üstünlikli iberildi",
         id: `FORM_${Date.now()}`,
       };
 
-      // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       return HttpResponse.json(response);

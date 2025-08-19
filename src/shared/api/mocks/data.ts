@@ -1,6 +1,5 @@
 import type { BirthPlace, Document, Organization } from "../contracts";
 
-// Mock data based on the UI component and realistic data for Turkmenistan
 export const mockBirthPlaces: BirthPlace[] = [
   { id: 1, label: "Saglygy goraýyş edarasynda doglan" },
   {

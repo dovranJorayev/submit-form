@@ -85,7 +85,6 @@ export const submitFormThunk = createAsyncThunk<SubmitResponse, SubmitFormData>(
     try {
       const submitData = new FormData();
 
-      // Append form fields
       submitData.append("placeOfBirth", formData.placeOfBirth.toString());
       submitData.append("documentType", formData.documentType.toString());
       submitData.append("issuedDate", formData.issuedDate);
@@ -95,7 +94,6 @@ export const submitFormThunk = createAsyncThunk<SubmitResponse, SubmitFormData>(
         formData.issuingOrganization.toString()
       );
 
-      // Append file if provided
       if (formData.file) {
         submitData.append("file", formData.file);
       }

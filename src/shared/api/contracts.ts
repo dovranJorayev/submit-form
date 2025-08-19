@@ -1,4 +1,3 @@
-// Types for the API responses
 export interface BirthPlace {
   id: number;
   label: string;
