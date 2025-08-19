@@ -1,15 +1,5 @@
-import type { AnyAction, AsyncThunkAction } from "@reduxjs/toolkit";
-import { useCallback } from "react";
+import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { useDispatch } from "react-redux";
 
-export const useThunkDispatch = () => {
-  const dispatch = useDispatch();
-
-  return useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (action: AsyncThunkAction<any, any, any>) => {
-      return dispatch(action as unknown as AnyAction);
-    },
-    [dispatch]
-  );
-};
+export type AppThunkDispatch = ThunkDispatch<unknown, unknown, UnknownAction>;
+export const useThunkDispatch = () => useDispatch<AppThunkDispatch>();

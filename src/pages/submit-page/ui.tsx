@@ -12,11 +12,13 @@ import {
   Paper,
   Radio,
   Select,
+  Skeleton,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
+import { useForm } from "@mantine/form";
 import {
   IconCalendarWeek,
   IconChevronDown,
@@ -28,18 +30,25 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { zodResolver } from "mantine-form-zod-resolver";
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { submitPageModel } from "./model";
+import { submitFormSchema, submitPageModel } from "./model";
 
 export const SubmitPage = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [radioValue, setRadioValue] = useState("option1");
-  const [dateValue, setDateValue] = useState<string | null>("12.10.2024");
-
-  const removeFile = () => {
-    setSelectedFile(null);
-  };
+  const dispatch = useThunkDispatch();
+  const form = useForm({
+    mode: "uncontrolled",
+    initialValues: {
+      placeOfBirth: 1,
+      documentType: 1,
+      issuedDate: "12.10.2024",
+      documentNumber: "2452",
+      issuingOrganization: 1,
+      file: undefined as File | undefined,
+    },
+    validate: zodResolver(submitFormSchema),
+  });
 
   const placeOfBornOptions = useSelector(
     submitPageModel.selectors.selectBirthPlaces
@@ -48,31 +57,42 @@ export const SubmitPage = () => {
     submitPageModel.selectors.selectOrganizations
   );
   const documents = useSelector(submitPageModel.selectors.selectDocuments);
-  // const loading = useSelector(submitPageModel.selectors.selectLoading);
+  const loading = useSelector(submitPageModel.selectors.selectLoading);
+  const submitting = useSelector(submitPageModel.selectors.selectSubmitting);
 
-  const dispatch = useThunkDispatch();
+  const handleSubmit = form.onSubmit(async (values) => {
+    const validationResult = form.validate();
+    if (validationResult.hasErrors) return;
+
+    const result = await dispatch(submitPageModel.actions.submit(values));
+    if (result.meta.requestStatus === "fulfilled") form.reset();
+  });
+  const handleRemove = () => {
+    form.setFieldValue("file", undefined);
+  };
 
   useEffect(() => {
     dispatch(submitPageModel.actions.load());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dispatch]);
 
   return (
-    <Box className="bg-gray-50 min-h-screen">
-      <Container size="xl" py="xl" component="form">
+    <Container size="xl" py="xl" className="bg-gray-50 min-h-screen">
+      <form id="submit-form" onSubmit={handleSubmit}>
         <Stack gap="xl">
-          {/* Radio Group Section */}
           <Paper shadow="xs" p="xl" radius="md">
-            <Radio.Group value={radioValue} onChange={setRadioValue}>
-              <Stack gap="sm">
+            <Radio.Group
+              key={form.key("placeOfBirth")}
+              {...form.getInputProps("placeOfBirth")}
+            >
+              <Stack gap="sm" mb="xs">
                 {placeOfBornOptions.map((option) => (
                   <Radio.Card
-                    className={clsx(
-                      "data-[checked]:border-[var(--mantine-primary-color-filled)]"
-                    )}
                     radius="md"
                     value={option.id.toString()}
                     key={option.id}
+                    className={clsx({
+                      "border-red-500": form.errors.placeOfBirth,
+                    })}
                   >
                     <Group
                       wrap="nowrap"
@@ -88,16 +108,22 @@ export const SubmitPage = () => {
                 ))}
               </Stack>
             </Radio.Group>
+
+            {loading && (
+              <Stack gap="xs" mb="xs">
+                <Skeleton height={28} />
+                <Skeleton height={28} />
+                <Skeleton height={28} />
+              </Stack>
+            )}
           </Paper>
 
-          {/* Form Section */}
           <Paper shadow="xs" p="xl" radius="md">
             <Title order={3} mb="xl" size="lg">
               Dogluş hakynda lukmançylyk şahadatnamasy
             </Title>
 
             <Stack gap="xl">
-              {/* First Row - Document Type, Date, Number */}
               <Grid>
                 <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                   <Stack gap="xs">
@@ -105,13 +131,14 @@ export const SubmitPage = () => {
                       Çaganyň dogluşyny tassyklaýan resminamasy
                     </Text>
                     <Select
-                      placeholder="Dogluş hakynda lukmançylyk şahadatnamasy"
-                      defaultValue="birth-certificate"
+                      placeholder="Resminamanyň görnüşi"
                       data={documents.map((document) => ({
                         value: document.id.toString(),
                         label: document.label,
                       }))}
                       rightSection={<IconChevronDown size={16} />}
+                      key={form.key("documentType")}
+                      {...form.getInputProps("documentType")}
                     />
                   </Stack>
                 </Grid.Col>
@@ -122,11 +149,11 @@ export const SubmitPage = () => {
                       Berlen wagty
                     </Text>
                     <DateInput
-                      value={dateValue}
-                      onChange={setDateValue}
                       valueFormat="DD.MM.YYYY"
                       placeholder="DD.MM.YYYY"
                       leftSection={<IconCalendarWeek size={16} />}
+                      key={form.key("issuedDate")}
+                      {...form.getInputProps("issuedDate")}
                     />
                   </Stack>
                 </Grid.Col>
@@ -137,9 +164,10 @@ export const SubmitPage = () => {
                       Nomeri
                     </Text>
                     <NumberInput
-                      defaultValue="2452"
                       leftSection={<IconNumber size={16} />}
                       hideControls
+                      key={form.key("documentNumber")}
+                      {...form.getInputProps("documentNumber")}
                     />
                   </Stack>
                 </Grid.Col>
@@ -147,11 +175,10 @@ export const SubmitPage = () => {
                 <Grid.Col span={12}>
                   <Stack gap="xs">
                     <Text size="sm" fw={500}>
-                      Resminamany beren edaranyň ady
+                      Beriji edaranyň ady
                     </Text>
                     <Select
-                      placeholder="M.Garrýýew ad. TDLUEÇSOÝM"
-                      defaultValue="medical-center"
+                      placeholder="Resminamany beren edaranyň ady"
                       data={organizations.map((organization) => ({
                         value: organization.id.toString(),
                         label: organization.label,
@@ -161,6 +188,8 @@ export const SubmitPage = () => {
                         withinPortal: false,
                         keepMounted: true,
                       }}
+                      key={form.key("issuingOrganization")}
+                      {...form.getInputProps("issuingOrganization")}
                     />
                   </Stack>
                 </Grid.Col>
@@ -169,7 +198,9 @@ export const SubmitPage = () => {
                 <Grid.Col span={{ base: 12, sm: 12, md: 4 }}>
                   <Stack gap="md">
                     <FileButton
-                      onChange={setSelectedFile}
+                      onChange={(file) =>
+                        form.setFieldValue("file", file || undefined)
+                      }
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     >
                       {(props) => (
@@ -192,7 +223,7 @@ export const SubmitPage = () => {
                     </FileButton>
 
                     {/* Selected File Display */}
-                    {selectedFile && (
+                    {form.getValues().file && (
                       <Paper
                         p="md"
                         radius="md"
@@ -205,17 +236,22 @@ export const SubmitPage = () => {
                             </Box>
                             <Stack gap={2}>
                               <Text size="sm" fw={500}>
-                                {selectedFile.name}
+                                {form.getValues().file?.name}
                               </Text>
                               <Text size="xs" c="dimmed">
-                                {Math.round(selectedFile.size / 1024)}kb
+                                {form.getValues().file
+                                  ? Math.round(
+                                      form.getValues().file!.size / 1024
+                                    )
+                                  : 0}
+                                kb
                               </Text>
                             </Stack>
                           </Group>
                           <ActionIcon
                             variant="light"
                             color="gray"
-                            onClick={removeFile}
+                            onClick={handleRemove}
                             radius="xl"
                             size="xs"
                           >
@@ -224,36 +260,44 @@ export const SubmitPage = () => {
                         </Group>
                       </Paper>
                     )}
+                    {form.errors.file && (
+                      <Text size="sm" c="red">
+                        {form.errors.file}
+                      </Text>
+                    )}
                   </Stack>
                 </Grid.Col>
               </Grid>
             </Stack>
           </Paper>
         </Stack>
+      </form>
 
-        {/* Action Buttons */}
-        <Group justify="start" mt="xl">
-          <Button
-            variant="outline"
-            size="md"
-            px="xl"
-            leftSection={<IconChevronLeft />}
-            color="green"
-            radius={"md"}
-          >
-            Yza
-          </Button>
-          <Button
-            color="green"
-            size="md"
-            px="xl"
-            rightSection={<IconChevronRight />}
-            radius={"md"}
-          >
-            Dowam et
-          </Button>
-        </Group>
-      </Container>
-    </Box>
+      <Group justify="start" mt="xl">
+        <Button
+          variant="outline"
+          size="md"
+          px="xl"
+          leftSection={<IconChevronLeft />}
+          color="green"
+          radius={"md"}
+          type="button"
+        >
+          Yza
+        </Button>
+        <Button
+          color="green"
+          size="md"
+          px="xl"
+          rightSection={<IconChevronRight />}
+          radius={"md"}
+          type="submit"
+          loading={submitting}
+          form="submit-form"
+        >
+          Dowam et
+        </Button>
+      </Group>
+    </Container>
   );
 };
